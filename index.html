@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .weather-container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 65%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            min-width: 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 8px;
+            background: #5271ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #3654d6;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #weather {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #city {
+            font-size: 23px;
+            color: #333;
+        }
+
+        #date {
+            color: #777;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        #icon {
+            width: 100px;
+            height: 100px;
+        }
+
+        #temperature {
+            font-size: 48px;
+            font-weight: bold;
+            color: #5271ff;
+            margin: 5px 0;
+        }
+
+        #condition {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            background: #f3f5ff;
+            padding: 15px 8px;
+            border-radius: 12px;
+        }
+
+        .detail {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .detail strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        #message {
+            color: #d93025;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 22px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="weather-container">
+
+        <h1>🌤️ Weather App</h1>
+        <p class="subtitle">Check the weather in your city</p>
+
+        <form id="weatherForm" class="search-box">
+            <input
+                type="text"
+                id="locationInput"
+                placeholder="Enter city name"
+                aria-label="Enter city name"
+                required
+            >
+
+            <button type="submit" id="searchButton">
+                Search
+            </button>
+        </form>
+
+        <p id="message" role="status" aria-live="polite"></p>
+
+        <div id="weather">
+
+            <h2 id="city"></h2>
+            <p id="date"></p>
+
+            <img id="icon" src="" alt="Weather icon">
+
+            <p id="temperature"></p>
+            <p id="condition"></p>
+
+            <div class="details">
+
+                <div class="detail">
+                    Humidity
+                    <strong id="humidity"></strong>
+                </div>
+
+                <div class="detail">
+                    Wind Speed
+                    <strong id="wind"></strong>
+                </div>
+
+                <div class="detail">
+                    Feels Like
+                    <strong id="feelsLike"></strong>
+                </div>
+
+            </div>
+        </div>
+
+        <p class="footer">Weather information powered by WeatherAPI</p>
+
+    </div>
+
+    <script>
+        // Your WeatherAPI key
+        const API_KEY = "66d0b5da7487406a87e124225262710";
+
+        const form = document.getElementById("weatherForm");
+        const input = document.getElementById("locationInput");
+        const button = document.getElementById("searchButton");
+        const weatherBox = document.getElementById("weather");
+        const message = document.getElementById("message");
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const location = input.value.trim();
+
+            if (!location) {
+                message.textContent = "Please enter a city name.";
+                return;
+            }
+
+            // Show loading message
+            button.disabled = true;
+            button.textContent = "Loading...";
+            message.textContent = "Fetching weather...";
+            weatherBox.style.display = "none";
+
+            try {
+                const url =
+                    `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(location)}&aqi=yes`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error?.message || "Unable to fetch weather."
+                    );
+                }
+
+                // Location information
+                document.getElementById("city").textContent =
+                    `${data.location.name}, ${data.location.country}`;
+
+                // Current local date and time for the selected location
+                document.getElementById("date").textContent =
+                    `Local time: ${data.location.localtime}`;
+
+                // Temperature in Celsius
+                document.getElementById("temperature").textContent =
+                    `${data.current.temp_c}°C`;
+
+                // Weather condition
+                document.getElementById("condition").textContent =
+                    data.current.condition.text;
+
+                // Weather icon
+                document.getElementById("icon").src =
+                    "https:" + data.current.condition.icon;
+
+                document.getElementById("icon").alt =
+                    data.current.condition.text;
+
+                // Additional weather details
+                document.getElementById("humidity").textContent =
+                    `${data.current.humidity}%`;
+
+                document.getElementById("wind").textContent =
+                    `${data.current.wind_kph} km/h`;
+
+                document.getElementById("feelsLike").textContent =
+                    `${data.current.feelslike_c}°C`;
+
+                message.textContent = "";
+                weatherBox.style.display = "block";
+
+            } catch (error) {
+                weatherBox.style.display = "none";
+                message.textContent =
+                    error.message === "Failed to fetch"
+                        ? "Network error. Check your internet connection."
+                        : error.message;
+            } finally {
+                button.disabled = false;
+                button.textContent = "Search";
+            }
+        });
+    </script>
+
+</body>
+</html>
